@@ -8,8 +8,17 @@
     MultipleReplace()
 }
 
+; Define replacements (find => replace)
+replacements := Map(
+    "<h2>", '<h2 class="h4 fw-semibold">',
+    "<h3>", '<h3 class="h5 fw-semibold">',
+    "<p>", '<p class="fs-sm">'
+)
+
 ; Main function to perform multiple replacements
 MultipleReplace() {
+    global replacements
+    
     ; Save current clipboard content
     clipboardBackup := ClipboardAll()
     A_Clipboard := ""
@@ -27,22 +36,11 @@ MultipleReplace() {
     originalText := A_Clipboard
     modifiedText := originalText
     
-    ; Define replacements (find => replace)
-    replacements := Map(
-        "<h2>", '<h2 class="h4 fw-semibold">',
-        "<h3>", '<h3 class="h5 fw-semibold">',
-        "<p>", '<p class="fs-sm">'
-    )
-    
     ; Perform all replacements
     replacementCount := 0
     for findStr, replaceStr in replacements {
-        ; Count occurrences before replacement
-        beforeCount := CountOccurrences(modifiedText, findStr)
-        
         ; Perform replacement
         modifiedText := StrReplace(modifiedText, findStr, replaceStr, false, &count)
-        
         replacementCount += count
     }
     
@@ -74,23 +72,20 @@ MultipleReplace() {
     }
 }
 
-; Helper function to count occurrences of a string
-CountOccurrences(haystack, needle) {
-    count := 0
-    pos := 1
-    while (pos := InStr(haystack, needle, false, pos)) {
-        count++
-        pos += StrLen(needle)
+; Build startup message from replacements Map
+BuildStartupMessage() {
+    global replacements
+    
+    message := "Ctrl+Alt+R = Replace HTML tags`n"
+    for findStr, replaceStr in replacements {
+        message .= findStr . " -> " . replaceStr . "`n"
     }
-    return count
+    return RTrim(message, "`n")
 }
 
 ; Startup message
 TrayTip("Multiple Replace Script Active", 
-    "Ctrl+Alt+R = Replace HTML tags`n" .
-    "<h2> -> <h2 class='h4 fw-semibold'>`n" .
-    "<h3> -> <h3 class='h5 fw-semibold'>`n" .
-    "<p> -> <p class='fs-sm'>", 
+    BuildStartupMessage(), 
     "Iconi")
 Sleep(4000)
 HideTrayTip()
